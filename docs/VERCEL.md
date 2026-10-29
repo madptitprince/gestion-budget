@@ -23,7 +23,7 @@ Pour les previews, utiliser une base distincte (ou une branche Neon) et des vari
 
 ## 3. Définir le mot de passe
 
-Dans **Settings → Environment Variables**, ajouter `BUDGET_PASSWORD` pour Production : choisir un mot de passe unique et long, d’au moins 16 caractères, conservé dans un gestionnaire de mots de passe. L’application possède un seul espace personnel. Ne pas utiliser le préfixe `NEXT_PUBLIC_`.
+Dans **Settings → Environment Variables**, ajouter `BUDGET_PASSWORD` pour Production : saisir votre mot de passe. Aucune longueur minimale n’est imposée ; la valeur doit simplement être non vide. L’application possède un seul espace personnel. Ne pas utiliser le préfixe `NEXT_PUBLIC_`.
 
 Les sessions durent 24 heures, sont stockées en base et utilisent un cookie HttpOnly, Secure sur Vercel, SameSite=Strict. Se déconnecter invalide la session côté serveur. Changer `BUDGET_PASSWORD` puis redéployer invalide les anciennes sessions. Après 10 tentatives de connexion dans une fenêtre de 15 minutes, les tentatives suivantes sont temporairement refusées.
 

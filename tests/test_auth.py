@@ -73,9 +73,19 @@ class AuthTests(unittest.TestCase):
     def test_vercel_never_falls_back_to_sqlite(self):
         with patch.dict(os.environ,{'VERCEL':'1','DATABASE_URL':''}):
             self.assertEqual(self.request('/api/state')[0],503)
-    def test_weak_or_missing_password_is_not_public(self):
+    def test_missing_password_is_not_public(self):
         with patch.dict(os.environ,{'VERCEL':'1','DATABASE_URL':'postgresql://unused','BUDGET_PASSWORD':''}):
             self.assertEqual(self.request('/api/state')[0],503)
+    def test_single_character_password_can_log_in(self):
+        import auth
+        with patch.dict(os.environ, {'BUDGET_PASSWORD': 'x'}):
+            with patch.dict(os.environ, {'VERCEL': '1', 'DATABASE_URL': 'postgresql://unused'}):
+                self.assertIsNone(auth.configuration_error())
+            status, _, _ = self.request('/api/login', 'POST', {'password': 'x'})
+            self.assertEqual(status, 200)
+            self.assertEqual(self.request('/api/state')[0], 200)
+            self.assertEqual(self.request('/api/logout', 'POST', {})[0], 200)
+            self.assertEqual(self.request('/api/login', 'POST', {'password': 'y'})[0], 401)
     def test_secure_cookie_in_vercel(self):
         import auth
         with patch.dict(os.environ,{'VERCEL':'1'}):self.assertIn('; Secure',auth.cookie('token'))

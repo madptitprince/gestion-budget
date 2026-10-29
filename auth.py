@@ -15,8 +15,8 @@ def configuration_error():
     password = os.environ.get('BUDGET_PASSWORD', '')
     if os.environ.get('VERCEL') and not database_url():
         return 'Stockage permanent non configuré. Ajoutez DATABASE_URL ou budget_DATABASE_URL dans Vercel.'
-    if enabled() and len(password) < 16:
-        return 'Accès privé non configuré. Définissez BUDGET_PASSWORD (16 caractères minimum).'
+    if enabled() and not password:
+        return 'Accès privé non configuré. Définissez BUDGET_PASSWORD avec un mot de passe non vide.'
     return None
 
 def token_from_headers(headers):

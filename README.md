@@ -47,7 +47,7 @@ Utiliser « Sauvegarder mes données » pour télécharger un JSON contenant les
 
 Pour choisir un autre fichier SQLite, définir `BUDGET_DB`. Les processus doivent être relancés après un redémarrage de la machine ; la base persiste tant que son disque est conservé.
 
-L’application est destinée à un usage personnel sur une machine de confiance. Le mode local sans `BUDGET_PASSWORD` est réservé à une machine de confiance. Sur Vercel, `DATABASE_URL` (ou `budget_DATABASE_URL`) et un `BUDGET_PASSWORD` de 16 caractères minimum sont obligatoires. La connexion donne accès à un seul espace personnel, accessible depuis plusieurs appareils. Aucune connexion bancaire n’est configurée. Le mode PostgreSQL nécessite `pip install -r requirements.txt`.
+L’application est destinée à un usage personnel sur une machine de confiance. Le mode local sans `BUDGET_PASSWORD` est réservé à une machine de confiance. Sur Vercel, `DATABASE_URL` (ou `budget_DATABASE_URL`) et un `BUDGET_PASSWORD` non vide, sans longueur minimale imposée, sont obligatoires. La connexion donne accès à un seul espace personnel, accessible depuis plusieurs appareils. Aucune connexion bancaire n’est configurée. Le mode PostgreSQL nécessite `pip install -r requirements.txt`.
 
 ## Vérification
 

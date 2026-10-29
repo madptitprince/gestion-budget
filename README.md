@@ -77,3 +77,5 @@ PG_BIN=/usr/lib/postgresql/17/bin python tests/postgres_check.py
 ```
 
 Ce test nécessite PostgreSQL 17 (`initdb`, `pg_ctl`, `postgres`) et OpenSSL. Il vérifie l’initialisation, les imports, les opérations authentifiées, les budgets/objectifs, la déconnexion et le refus des certificats invalides. Les certificats de test sont générés temporairement ; en production, la connexion utilise le bundle Mozilla fourni par `certifi`, avec vérification du certificat et du nom d’hôte.
+
+Pour vérifier aussi le parcours navigateur HTTPS sur PostgreSQL, installer `playwright` dans l’environnement de test et lancer `BUDGET_TEST_BROWSER=1 PG_BIN=/usr/lib/postgresql/17/bin python tests/postgres_check.py`. Chromium doit être disponible dans `/usr/bin/chromium`. Le test fait confiance uniquement au certificat temporaire généré pour ce test, vérifie le cookie Secure/HttpOnly, le rechargement, le retour depuis une page externe et les messages en cas de session perdue.

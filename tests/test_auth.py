@@ -48,7 +48,7 @@ class AuthTests(unittest.TestCase):
         status,body,_=self.request('/');self.assertEqual(status,200);self.assertIn(b'login-form',body)
     def test_login_session_and_logout(self):
         status,_,headers=self.login();self.assertEqual(status,200)
-        cookie=headers['Set-Cookie'];self.assertIn('HttpOnly',cookie);self.assertIn('SameSite=Strict',cookie)
+        cookie=headers['Set-Cookie'];self.assertIn('HttpOnly',cookie);self.assertIn('SameSite=Lax',cookie)
         self.assertEqual(self.request('/api/state')[0],200)
         # A new handler connection and the Vercel rewritten route share persisted sessions.
         self.assertEqual(self.request('/api/index?__route=/api/state')[0],200)
@@ -57,6 +57,31 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(self.request('/api/state')[0],401)
         replay=urllib.request.build_opener();replay.addheaders=[('Cookie',old_cookie)]
         self.assertEqual(self.request('/api/state',client=replay)[0],401)
+    def test_session_survives_multiple_cookie_headers_and_unrelated_bad_cookie(self):
+        import http.client
+        status, _, headers = self.login(); self.assertEqual(status, 200)
+        session_cookie = headers['Set-Cookie'].split(';')[0]
+        conn = http.client.HTTPConnection('127.0.0.1', self.http.server_port)
+        try:
+            conn.putrequest('GET', '/api/session')
+            conn.putheader('Cookie', 'unrelated invalid cookie')
+            conn.putheader('Cookie', session_cookie)
+            conn.endheaders()
+            response = conn.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertTrue(json.loads(response.read())['authenticated'])
+        finally: conn.close()
+    def test_session_status_distinguishes_cookie_missing_from_invalid(self):
+        status, body, headers = self.request('/api/session')
+        self.assertEqual(json.loads(body)['reason'], 'cookie_missing')
+        client = urllib.request.build_opener(); client.addheaders = [('Cookie', 'clair_session=invalid')]
+        status, body, _ = self.request('/api/session', client=client)
+        self.assertEqual(json.loads(body)['reason'], 'session_invalid')
+        self.assertIn('private', headers['Cache-Control'])
+        self.assertEqual(headers['Vary'], 'Cookie')
+    def test_conflicting_session_cookies_are_rejected(self):
+        import auth
+        self.assertEqual(auth.token_from_headers({'Cookie': 'clair_session=one; clair_session=two'}), '')
     def test_login_rate_limit_persists(self):
         for _ in range(10):self.assertEqual(self.request('/api/login','POST',{'password':'wrong'})[0],401)
         self.assertEqual(self.login()[0],429)

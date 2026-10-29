@@ -4,6 +4,7 @@ import hmac
 from http.cookies import SimpleCookie, CookieError
 import os
 import secrets
+import re
 import time
 from storage import database_url
 
@@ -20,11 +21,25 @@ def configuration_error():
     return None
 
 def token_from_headers(headers):
-    try:
-        c = SimpleCookie(); c.load(headers.get('Cookie', ''))
-        token = c['clair_session'].value if 'clair_session' in c else ''
-        return token if len(token) <= 100 else ''
-    except CookieError: return ''
+    # HTTP/2 gateways may forward Cookie as multiple header fields. Read all of
+    # them, and do not let an unrelated malformed cookie hide our session.
+    values = (headers.get_all('Cookie', []) if hasattr(headers, 'get_all')
+              else [headers.get('Cookie') or headers.get('cookie', '')])
+    tokens = set()
+    for value in values:
+        for part in value.split(';'):
+            name, separator, raw = part.strip().partition('=')
+            if name != 'clair_session' or not separator:
+                continue
+            try:
+                cookie = SimpleCookie(); cookie.load(name + '=' + raw)
+                token = cookie[name].value if name in cookie else ''
+            except CookieError:
+                continue
+            if re.fullmatch(r'[A-Za-z0-9_-]{1,100}', token):
+                tokens.add(token)
+    # Conflicting session cookies are ambiguous; never silently pick an identity.
+    return next(iter(tokens)) if len(tokens) == 1 else ''
 
 def digest(token): return hashlib.sha256(token.encode()).hexdigest()
 
@@ -68,4 +83,4 @@ def logout(headers, connect):
 def cookie(token='', clear=False):
     # Vercel terminates HTTPS; local HTTP tests intentionally use a non-Secure cookie.
     secure = '; Secure' if os.environ.get('VERCEL') else ''
-    return f'clair_session={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age={0 if clear else SESSION_SECONDS}{secure}'
+    return f'clair_session={token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={0 if clear else SESSION_SECONDS}{secure}'

@@ -7,6 +7,9 @@ import json
 import os
 from pathlib import Path
 import socket
+import ssl
+import hashlib
+import base64
 import subprocess
 import sys
 import tempfile
@@ -86,6 +89,73 @@ with tempfile.TemporaryDirectory(prefix='clair-pg-') as directory:
             assert request('/api/logout','POST',{})[0] == 200
             assert request('/api/state')[0] == 401
             httpd.shutdown(); httpd.server_close(); httpd = None
+            if os.environ.get('BUDGET_TEST_BROWSER'):
+                from playwright.sync_api import sync_playwright, expect
+                # Trust only this generated test certificate in Chromium, not arbitrary TLS errors.
+                pubkey = subprocess.run(['openssl', 'x509', '-in', str(cert), '-pubkey', '-noout'],
+                                        capture_output=True, check=True).stdout
+                der = subprocess.run(['openssl', 'pkey', '-pubin', '-outform', 'DER'],
+                                     input=pubkey, capture_output=True, check=True).stdout
+                spki = base64.b64encode(hashlib.sha256(der).digest()).decode()
+                httpd = server.ThreadingHTTPServer(('127.0.0.1', 0), handler)
+                tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                tls.load_cert_chain(cert, key)
+                httpd.socket = tls.wrap_socket(httpd.socket, server_side=True)
+                threading.Thread(target=httpd.serve_forever, daemon=True).start()
+                secure_base = f'https://localhost:{httpd.server_port}'
+                with patch.dict(os.environ, {'VERCEL': '1', 'NODE_EXTRA_CA_CERTS': str(cert)}), sync_playwright() as browser_tool:
+                    browser = browser_tool.chromium.launch(executable_path='/usr/bin/chromium',
+                        headless=True, args=['--no-sandbox', '--ignore-certificate-errors-spki-list='+spki])
+                    context = browser.new_context()
+                    page = context.new_page()
+                    page.goto(secure_base)
+                    page.get_by_label('Votre mot de passe').fill('wrong')
+                    page.locator('#login-form button').click()
+                    expect(page.locator('#login-error')).to_contain_text('incorrect')
+                    page.get_by_label('Votre mot de passe').fill('x')
+                    page.locator('#login-form button').click()
+                    expect(page.locator('.stat-card')).to_have_count(4)
+                    saved = next(c for c in context.cookies() if c['name']=='clair_session')
+                    assert saved['secure'] and saved['httpOnly'] and saved['sameSite']=='Lax'
+                    assert page.evaluate('sessionStorage.getItem("clair_login_pending")') is None
+                    page.reload(); expect(page.locator('.stat-card')).to_have_count(4)
+                    # Returning from an external page must preserve a valid session.
+                    page.route('https://external.example/**', lambda r: r.fulfill(
+                        content_type='text/html', body=f'<a href="{secure_base}">Retour au budget</a>'))
+                    page.goto('https://external.example/')
+                    page.get_by_role('link', name='Retour au budget').click()
+                    expect(page.locator('.stat-card')).to_have_count(4)
+                    page.get_by_role('button', name='Se déconnecter').click()
+                    expect(page.locator('#login-form')).to_be_visible()
+                    context.close()
+                    # Reproduce a browser/gateway that drops the login Set-Cookie header.
+                    context = browser.new_context(); page = context.new_page()
+                    def drop_cookie(route):
+                        response = route.fetch()
+                        headers = {k:v for k,v in response.headers.items() if k.lower()!='set-cookie'}
+                        context.clear_cookies()
+                        route.fulfill(response=response, headers=headers)
+                    page.route('**/api/login', drop_cookie)
+                    page.goto(secure_base)
+                    page.get_by_label('Votre mot de passe').fill('x')
+                    page.locator('#login-form button').click()
+                    expect(page.locator('#login-error')).to_contain_text('connexion n’a pas été conservée')
+                    expect(page.locator('#login-form button')).to_be_enabled()
+                    expect(page.locator('#login-form')).to_be_visible()
+                    assert page.url == secure_base+'/'
+                    context.close()
+                    # Session cookie present but unavailable in backend must be explicit too.
+                    context = browser.new_context(); page = context.new_page()
+                    page.route('**/api/session', lambda r: r.fulfill(json={
+                        'enabled':True, 'authenticated':False, 'reason':'session_invalid'}))
+                    page.goto(secure_base)
+                    page.get_by_label('Votre mot de passe').fill('x')
+                    page.locator('#login-form button').click()
+                    expect(page.locator('#login-error')).to_contain_text('SESSION_INVALID')
+                    expect(page.locator('#login-form')).to_be_visible()
+                    context.close(); browser.close()
+                httpd.shutdown(); httpd.server_close(); httpd = None
+                print('PASS: HTTPS browser login, secure cookie, reload, external navigation, logout, explicit missing/invalid-session errors.')
             # Verification must fail for the wrong certificate hostname.
             with patch.dict(os.environ, {'budget_DATABASE_URL': url.replace('localhost','127.0.0.1')}):
                 try:

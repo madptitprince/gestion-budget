@@ -25,7 +25,7 @@ Pour les previews, utiliser une base distincte (ou une branche Neon) et des vari
 
 Dans **Settings → Environment Variables**, ajouter `BUDGET_PASSWORD` pour Production : saisir votre mot de passe. Aucune longueur minimale n’est imposée ; la valeur doit simplement être non vide. L’application possède un seul espace personnel. Ne pas utiliser le préfixe `NEXT_PUBLIC_`.
 
-Les sessions durent 24 heures, sont stockées en base et utilisent un cookie HttpOnly, Secure sur Vercel, SameSite=Strict. Se déconnecter invalide la session côté serveur. Changer `BUDGET_PASSWORD` puis redéployer invalide les anciennes sessions. Après 10 tentatives de connexion dans une fenêtre de 15 minutes, les tentatives suivantes sont temporairement refusées.
+Les sessions durent 24 heures, sont stockées en base et utilisent un cookie HttpOnly, Secure sur Vercel, SameSite=Lax. Se déconnecter invalide la session côté serveur. Changer `BUDGET_PASSWORD` puis redéployer invalide les anciennes sessions. Après 10 tentatives de connexion dans une fenêtre de 15 minutes, les tentatives suivantes sont temporairement refusées.
 
 L’application refuse de servir les données sur Vercel si le mot de passe ou PostgreSQL ne sont pas configurés. Elle ne bascule jamais sur un fichier SQLite temporaire en production.
 
@@ -66,3 +66,8 @@ Si le stockage est indisponible, la réponse et les journaux Vercel contiennent 
 - `DB_UNAVAILABLE` : erreur non classée.
 
 Pour signaler un problème, transmettre le code et le message fixe affiché, jamais la valeur de `DATABASE_URL` ou de `budget_DATABASE_URL`.
+
+
+Si le bon mot de passe ramenait silencieusement au formulaire, mettre à jour le déploiement : la lecture des cookies prend désormais en charge plusieurs en-têtes Cookie, et le navigateur vérifie la session avant d’ouvrir le tableau de bord. Les cookies de session sont Secure et HttpOnly sur Vercel, avec SameSite=Lax pour conserver la connexion après une navigation externe ; les protections contre les écritures depuis une autre origine restent actives.
+
+Si le navigateur bloque le cookie, le formulaire le signale explicitement. Ouvrir l’adresse du site dans un onglet normal et autoriser ses cookies. Le code `SESSION_INVALID` signifie que le cookie est transmis mais que la session n’est pas reconnue par le serveur. Aucun jeton de session ni mot de passe ne doit être transmis pour diagnostiquer ce cas.

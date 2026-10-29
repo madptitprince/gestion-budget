@@ -97,7 +97,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', mime)
         self.send_header('Content-Length', str(len(data)))
-        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Cache-Control', 'private, no-store, max-age=0')
+        self.send_header('Vary', 'Cookie')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'same-origin')
         if cookie: self.send_header('Set-Cookie', cookie)
@@ -126,7 +127,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, (ROOT/'web'/name).read_bytes(), mime+'; charset=utf-8')
         if not self.prepare(): return
         signed_in = auth.authenticated(self.headers, connect)
-        if path == '/api/session': return self.send(200, {'enabled': auth.enabled(), 'authenticated': signed_in})
+        if path == '/api/session':
+            reason = None if signed_in else ('session_invalid' if auth.token_from_headers(self.headers) else 'cookie_missing')
+            return self.send(200, {'enabled': auth.enabled(), 'authenticated': signed_in, 'reason': reason})
         if not signed_in:
             if path in ('/', '/login'):
                 return self.send(200, (ROOT/'web/login.html').read_bytes(), 'text/html; charset=utf-8')

@@ -43,12 +43,13 @@ class NeonConfigTests(unittest.TestCase):
     def test_prefixed_url_reaches_driver_with_tls_verification(self):
         driver = types.ModuleType('psycopg'); driver.connect = MagicMock()
         rows = types.ModuleType('psycopg.rows'); rows.dict_row = object()
+        certificates = types.ModuleType('certifi'); certificates.where = lambda: '/trusted/mozilla.pem'
         with patch.dict(os.environ, {'budget_DATABASE_URL': 'postgresql://test.invalid/db'}), \
-             patch.dict(sys.modules, {'psycopg': driver, 'psycopg.rows': rows}), \
+             patch.dict(sys.modules, {'psycopg': driver, 'psycopg.rows': rows, 'certifi': certificates}), \
              patch.object(storage.sqlite3, 'connect', side_effect=AssertionError('SQLite forbidden')):
             with storage.connection(Path('/unused')) as db:
                 self.assertIsInstance(db, storage.PostgresConnection)
             driver.connect.assert_called_once_with('postgresql://test.invalid/db', row_factory=rows.dict_row,
-                                                   connect_timeout=10, sslmode='verify-full', sslrootcert='system')
+                                                   connect_timeout=10, sslmode='verify-full', sslrootcert='/trusted/mozilla.pem')
 
 if __name__ == '__main__': unittest.main(verbosity=2)

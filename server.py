@@ -7,8 +7,9 @@ import os
 import re
 import sqlite3
 import threading
+import sys
 import auth
-from storage import connection, database_url
+from storage import connection, database_url, error_details
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -109,8 +110,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send(503, {'error': error}); return False
         try:
             init_db()
-        except Exception:
-            self.send(503, {'error': 'Stockage indisponible. Vérifiez la connexion à la base.'}); return False
+        except Exception as exc:
+            details = error_details(exc)
+            print('[clair.storage] ' + details['code'], file=sys.stderr, flush=True)
+            self.send(503, details); return False
         return True
     def do_GET(self):
         try: self.get()

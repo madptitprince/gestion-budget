@@ -67,3 +67,13 @@ python tests/browser_check.py
 Ce test utilise une base temporaire et des données de test. Le test complet d’import peut recevoir `BUDGET_TEST_XLSX=/chemin/vers/budget.xlsx`. Les contrôles d’interface couvrent les cinq pages à 390, 768 et 1440 pixels, la saisie, la modification, la suppression, les budgets, les objectifs et les exports.
 
 Pour tester également la connexion privée dans le navigateur : `BUDGET_TEST_AUTH=1 python tests/browser_check.py`.
+
+
+Test facultatif avec un vrai PostgreSQL et TLS (base temporaire, aucun accès à Neon) :
+
+```sh
+python -m pip install -r requirements.txt
+PG_BIN=/usr/lib/postgresql/17/bin python tests/postgres_check.py
+```
+
+Ce test nécessite PostgreSQL 17 (`initdb`, `pg_ctl`, `postgres`) et OpenSSL. Il vérifie l’initialisation, les imports, les opérations authentifiées, les budgets/objectifs, la déconnexion et le refus des certificats invalides. Les certificats de test sont générés temporairement ; en production, la connexion utilise le bundle Mozilla fourni par `certifi`, avec vérification du certificat et du nom d’hôte.

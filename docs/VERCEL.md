@@ -17,7 +17,7 @@ Dans le projet Vercel, créer/connecter une base **Neon PostgreSQL** via la sect
 
 L’intégration doit fournir une variable `DATABASE_URL` ou `budget_DATABASE_URL` au projet pour l’environnement **Production**. Le préfixe `budget_` choisi lors de la connexion Neon est reconnu automatiquement ; il n’est pas nécessaire de renommer les variables. Si les deux noms existent, `DATABASE_URL` est prioritaire. Pour un autre préfixe, ajouter `DATABASE_URL` avec la chaîne de connexion PostgreSQL fournie par Neon. Utiliser de préférence la connexion poolée. Saisir les valeurs uniquement dans les paramètres sécurisés Vercel, jamais dans Git ou dans le chat.
 
-Le pilote impose TLS avec vérification du certificat et du nom d’hôte. Le schéma est initialisé automatiquement au premier accès, sans effacer les données existantes. L’utilisateur PostgreSQL doit pouvoir créer les tables et séquences dans sa propre base.
+Le pilote impose TLS avec vérification du certificat et du nom d’hôte. Le bundle de certificats Mozilla est fourni explicitement par la dépendance `certifi`, pour ne pas dépendre des chemins de certificats du système Vercel. Le schéma est initialisé automatiquement au premier accès, sans effacer les données existantes. L’utilisateur PostgreSQL doit pouvoir créer les tables et séquences dans sa propre base.
 
 Pour les previews, utiliser une base distincte (ou une branche Neon) et des variables propres à Preview. Ne pas connecter une preview de code non vérifié aux données financières de production.
 
@@ -49,4 +49,20 @@ La base locale `.data/budget.sqlite3` est exclue du dépôt et de Vercel. Le pre
 
 Les tests locaux couvrent les opérations, les imports, les contraintes de budget, les sessions, la limitation des tentatives, les routes de la fonction Vercel et l’interface responsive. Les dépendances PostgreSQL sont installables sous Python 3.12.
 
-La connexion à une véritable base PostgreSQL et le déploiement Vercel nécessitent les ressources de votre compte. Ils doivent être vérifiés après configuration ; les tests locaux SQLite ne démontrent pas à eux seuls le fonctionnement de l’hébergement distant.
+Le test `tests/postgres_check.py` a également validé le fonctionnement sur un vrai PostgreSQL 17 local avec TLS, l’initialisation répétée du schéma, les imports sans doublons, les opérations authentifiées et le refus des certificats invalides. La connexion à votre base Neon et le déploiement Vercel doivent encore être vérifiés dans votre compte.
+
+
+## Diagnostic du stockage
+
+Si le stockage est indisponible, la réponse et les journaux Vercel contiennent un code fixe. Aucune chaîne de connexion, aucun mot de passe ni exception brute ne sont exposés.
+
+- `DB_TLS` : vérification TLS ou certificats.
+- `DB_AUTH` : identifiants PostgreSQL refusés.
+- `DB_PERMISSIONS` : droits insuffisants sur la base.
+- `DB_NAME` : nom de base inexistant.
+- `DB_URL` : chaîne de connexion invalide.
+- `DB_NETWORK` : connexion refusée, résolution DNS ou délai dépassé.
+- `DB_DRIVER` : dépendance PostgreSQL manquante.
+- `DB_UNAVAILABLE` : erreur non classée.
+
+Pour signaler un problème, transmettre le code et le message fixe affiché, jamais la valeur de `DATABASE_URL` ou de `budget_DATABASE_URL`.

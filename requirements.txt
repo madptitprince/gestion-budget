@@ -1,1 +1,2 @@
 psycopg[binary]==3.2.9
+certifi==2026.10.23

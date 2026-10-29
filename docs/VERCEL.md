@@ -1,0 +1,52 @@
+# Mettre Clair en ligne avec Vercel
+
+Cette version utilise une fonction Python Vercel, une base PostgreSQL permanente et une connexion privée à propriétaire unique. Les données financières ne sont jamais intégrées au déploiement Git.
+
+## 1. Importer le dépôt
+
+Dans Vercel : **Add New → Project**, puis importer `madptitprince/gestion-budget`.
+
+- Framework : **Other** (aucun framework).
+- Root Directory : racine du dépôt.
+- Laisser les commandes Build/Install et Output Directory aux valeurs automatiques ; ne pas saisir `python server.py` comme commande de build.
+- `api/index.py`, `requirements.txt`, `.python-version` et `vercel.json` configurent la fonction Python et les routes.
+
+## 2. Connecter le stockage
+
+Dans le projet Vercel, créer/connecter une base **Neon PostgreSQL** via la section Storage ou Marketplace. Choisir une région proche de celle de la fonction. Vérifier l’offre et ses limites dans le fournisseur avant validation.
+
+L’intégration doit fournir une variable `DATABASE_URL` au projet pour l’environnement **Production**. Si elle fournit un autre nom, ajouter `DATABASE_URL` avec la chaîne de connexion PostgreSQL fournie par Neon. Utiliser de préférence la connexion poolée. Saisir les valeurs uniquement dans les paramètres sécurisés Vercel, jamais dans Git ou dans le chat.
+
+Le pilote impose TLS avec vérification du certificat et du nom d’hôte. Le schéma est initialisé automatiquement au premier accès, sans effacer les données existantes. L’utilisateur PostgreSQL doit pouvoir créer les tables et séquences dans sa propre base.
+
+Pour les previews, utiliser une base distincte (ou une branche Neon) et des variables propres à Preview. Ne pas connecter une preview de code non vérifié aux données financières de production.
+
+## 3. Définir le mot de passe
+
+Dans **Settings → Environment Variables**, ajouter `BUDGET_PASSWORD` pour Production : choisir un mot de passe unique et long, d’au moins 16 caractères, conservé dans un gestionnaire de mots de passe. L’application possède un seul espace personnel. Ne pas utiliser le préfixe `NEXT_PUBLIC_`.
+
+Les sessions durent 24 heures, sont stockées en base et utilisent un cookie HttpOnly, Secure sur Vercel, SameSite=Strict. Se déconnecter invalide la session côté serveur. Changer `BUDGET_PASSWORD` puis redéployer invalide les anciennes sessions. Après 10 tentatives de connexion dans une fenêtre de 15 minutes, les tentatives suivantes sont temporairement refusées.
+
+L’application refuse de servir les données sur Vercel si le mot de passe ou PostgreSQL ne sont pas configurés. Elle ne bascule jamais sur un fichier SQLite temporaire en production.
+
+## 4. Déployer et vérifier
+
+Lancer **Deploy**, ou **Redeploy** après modification des variables. Vercel fournit alors l’adresse du projet. Cette adresse n’existe pas tant que le déploiement n’a pas abouti.
+
+Sur l’adresse obtenue :
+
+1. Vérifier que la page de connexion s’affiche.
+2. Se connecter, puis importer votre classeur Excel depuis « Mes opérations → Importer ».
+3. Vérifier le nombre de lignes dans l’aperçu avant confirmation.
+4. Sélectionner un mois renseigné et comparer les revenus, dépenses, versements d’épargne et reste disponible aux cellules sources du classeur.
+5. Recharger et vérifier les chiffres. Réimporter le même classeur ne doit pas ajouter de doublons.
+6. Se déconnecter et ouvrir l’adresse dans une fenêtre privée : les données et les exports doivent demander une connexion.
+7. Vérifier après un redéploiement que les données restent présentes.
+
+La base locale `.data/budget.sqlite3` est exclue du dépôt et de Vercel. Le premier déploiement commence donc vide. Si des opérations, budgets ou objectifs ont été ajoutés après l’import initial, conserver la sauvegarde locale avant une migration : réimporter le classeur seul ne migre pas ces changements supplémentaires.
+
+## Validation effectuée et restante
+
+Les tests locaux couvrent les opérations, les imports, les contraintes de budget, les sessions, la limitation des tentatives, les routes de la fonction Vercel et l’interface responsive. Les dépendances PostgreSQL sont installables sous Python 3.12.
+
+La connexion à une véritable base PostgreSQL et le déploiement Vercel nécessitent les ressources de votre compte. Ils doivent être vérifiés après configuration ; les tests locaux SQLite ne démontrent pas à eux seuls le fonctionnement de l’hébergement distant.

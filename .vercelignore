@@ -1,0 +1,10 @@
+.git
+.data
+.artifacts
+__pycache__
+**/__pycache__
+.env*
+.venv*
+tests
+*.xlsx
+*.sqlite3

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d6757"><title>Clair — Votre budget, simplement</title><link rel="stylesheet" href="/styles.css"><script defer src="/app.js"></script></head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<a class="brand" href="#dashboard" aria-label="Clair, accueil"><span class="brand-mark">c<span>•</span></span>clair<span class="brand-dot">.</span></a>
+<p class="brand-caption">L'esprit libre, le budget clair.</p>
+<div class="workspace"><div class="avatar">A</div><div><strong>Mon espace personnel</strong><span>Budget en euros</span></div><span class="workspace-dot"></span></div>
+<p class="nav-caption">MON QUOTIDIEN</p>
+<nav aria-label="Navigation principale">
+<button data-page="dashboard" class="nav-item active"><span data-icon="grid"></span>Vue d'ensemble</button>
+<button data-page="entries" class="nav-item"><span data-icon="arrows"></span>Mes opérations</button>
+<button data-page="budgets" class="nav-item"><span data-icon="wallet"></span>Mes budgets</button>
+<button data-page="savings" class="nav-item"><span data-icon="sprout"></span>Épargne & objectifs</button>
+<button data-page="analysis" class="nav-item"><span data-icon="chart"></span>Mes analyses</button>
+</nav>
+<div class="sidebar-bottom"><div class="import-card"><span data-icon="file"></span><strong>Votre Excel, en plus simple.</strong><p>Retrouvez votre historique au même endroit.</p><button class="import-link" data-action="import">Importer un fichier <span>↗</span></button></div><button class="backup-link" data-action="backup"><span data-icon="download"></span>Sauvegarder mes données</button><div class="local-status"><span></span>Sauvegardé dans votre espace</div></div>
+</aside>
+<div class="main-shell"><header class="topbar"><div class="breadcrumb">Mon espace <span>/</span> <strong id="breadcrumb">Vue d'ensemble</strong></div><div class="top-right"><span class="private-label"><span data-icon="lock"></span>Espace personnel</span><div class="avatar small">A</div></div></header>
+<main id="main"><div class="page-heading"><div><div class="eyebrow">VOTRE ARGENT, EN TOUTE CLARTÉ</div><h1 id="page-title">Vue d'ensemble</h1><p id="page-subtitle">Un regard sur vos finances. Un pas vers vos projets.</p></div><div class="page-actions"><label class="period-picker"><span data-icon="calendar"></span><input type="month" id="period" aria-label="Mois affiché" value="2026-10"></label><button class="button primary" data-action="add-entry"><span data-icon="plus"></span>Ajouter une opération</button></div></div><div id="content" aria-live="polite"><div class="loading">Chargement de votre espace…</div></div><footer>Clair <span>Un peu d'organisation. Beaucoup de sérénité.</span><span>Montants en EUR · Données personnelles</span></footer></main></div>
+</div>
+<dialog id="modal"><div id="modal-content"></div></dialog><div id="toast" role="status"></div>
+</body></html>

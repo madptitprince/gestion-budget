@@ -15,6 +15,7 @@ from api.index import handler
 class AuthTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.base_env=patch.dict(os.environ,{"DATABASE_URL":"", "budget_DATABASE_URL":"", "VERCEL":"", "BUDGET_PASSWORD":""});cls.base_env.start()
         cls.temp=tempfile.TemporaryDirectory()
         cls.original_db=server.DB
         server.DB=Path(cls.temp.name)/'auth.sqlite3';server.init_db()
@@ -23,7 +24,7 @@ class AuthTests(unittest.TestCase):
         cls.base=f'http://127.0.0.1:{cls.http.server_port}'
     @classmethod
     def tearDownClass(cls):
-        cls.http.shutdown();cls.http.server_close();cls.temp.cleanup();server.DB=cls.original_db
+        cls.http.shutdown();cls.http.server_close();cls.temp.cleanup();server.DB=cls.original_db;cls.base_env.stop()
     def setUp(self):
         self.password='Test-only-long-passphrase-42'
         self.env=patch.dict(os.environ,{'BUDGET_PASSWORD':self.password})

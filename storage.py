@@ -1,7 +1,11 @@
-"""SQLite locally; durable PostgreSQL when DATABASE_URL is configured."""
+"""SQLite locally; durable PostgreSQL with standard or Neon-prefixed config."""
 from contextlib import contextmanager
 import os
 import sqlite3
+
+def database_url():
+    """Prefer the explicit override; accept this project's Neon integration prefix."""
+    return os.environ.get('DATABASE_URL') or os.environ.get('budget_DATABASE_URL')
 
 class PostgresConnection:
     def __init__(self, raw): self.raw = raw
@@ -19,7 +23,7 @@ class PostgresConnection:
 
 @contextmanager
 def connection(path):
-    url = os.environ.get('DATABASE_URL')
+    url = database_url()
     if url:
         import psycopg
         from psycopg.rows import dict_row

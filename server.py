@@ -8,7 +8,7 @@ import re
 import sqlite3
 import threading
 import auth
-from storage import connection
+from storage import connection, database_url
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -26,8 +26,9 @@ def connect():
 
 def init_db():
     global _initialized
-    postgres = bool(os.environ.get('DATABASE_URL'))
-    key = os.environ.get('DATABASE_URL') or str(DB)
+    url = database_url()
+    postgres = bool(url)
+    key = url or str(DB)
     with _init_lock:
         if _initialized == key: return
         if not postgres: DB.parent.mkdir(parents=True, exist_ok=True)

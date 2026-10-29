@@ -13,6 +13,8 @@ from test_app import workbook
 from playwright.sync_api import sync_playwright, expect
 
 root=Path(__file__).resolve().parents[1]
+# Keep all browser checks on their disposable SQLite database, even in hosted environments.
+for name in ('DATABASE_URL','budget_DATABASE_URL','VERCEL','BUDGET_PASSWORD'): os.environ.pop(name, None)
 with tempfile.TemporaryDirectory() as tmp:
     server.DB=Path(tmp)/'browser.sqlite3'
     server.init_db()

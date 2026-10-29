@@ -1,4 +1,6 @@
 import io
+import os
+from unittest.mock import patch
 import json
 import tempfile
 import threading
@@ -29,12 +31,13 @@ def workbook():
 class AppTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.env=patch.dict(os.environ,{"DATABASE_URL":"", "budget_DATABASE_URL":"", "VERCEL":"", "BUDGET_PASSWORD":""});cls.env.start()
         cls.temp=tempfile.TemporaryDirectory();server.DB=Path(cls.temp.name)/'test.sqlite3';server.init_db()
         cls.http=server.ThreadingHTTPServer(('127.0.0.1',0),server.Handler)
         threading.Thread(target=cls.http.serve_forever,daemon=True).start()
         cls.base=f'http://127.0.0.1:{cls.http.server_port}'
     @classmethod
-    def tearDownClass(cls): cls.http.shutdown();cls.http.server_close();cls.temp.cleanup()
+    def tearDownClass(cls): cls.http.shutdown();cls.http.server_close();cls.temp.cleanup();cls.env.stop()
     def setUp(self):
         with server.connect() as db:
             for table in ('entries','budgets','goals'):db.execute('DELETE FROM '+table)

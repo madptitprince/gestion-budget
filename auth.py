@@ -5,6 +5,7 @@ from http.cookies import SimpleCookie, CookieError
 import os
 import secrets
 import time
+from storage import database_url
 
 SESSION_SECONDS = 86400
 
@@ -12,8 +13,8 @@ def enabled(): return bool(os.environ.get('BUDGET_PASSWORD') or os.environ.get('
 
 def configuration_error():
     password = os.environ.get('BUDGET_PASSWORD', '')
-    if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL'):
-        return 'Stockage permanent non configuré. Ajoutez DATABASE_URL dans Vercel.'
+    if os.environ.get('VERCEL') and not database_url():
+        return 'Stockage permanent non configuré. Ajoutez DATABASE_URL ou budget_DATABASE_URL dans Vercel.'
     if enabled() and len(password) < 16:
         return 'Accès privé non configuré. Définissez BUDGET_PASSWORD (16 caractères minimum).'
     return None

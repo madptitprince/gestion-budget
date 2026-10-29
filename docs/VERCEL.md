@@ -15,7 +15,7 @@ Dans Vercel : **Add New → Project**, puis importer `madptitprince/gestion-budg
 
 Dans le projet Vercel, créer/connecter une base **Neon PostgreSQL** via la section Storage ou Marketplace. Choisir une région proche de celle de la fonction. Vérifier l’offre et ses limites dans le fournisseur avant validation.
 
-L’intégration doit fournir une variable `DATABASE_URL` au projet pour l’environnement **Production**. Si elle fournit un autre nom, ajouter `DATABASE_URL` avec la chaîne de connexion PostgreSQL fournie par Neon. Utiliser de préférence la connexion poolée. Saisir les valeurs uniquement dans les paramètres sécurisés Vercel, jamais dans Git ou dans le chat.
+L’intégration doit fournir une variable `DATABASE_URL` ou `budget_DATABASE_URL` au projet pour l’environnement **Production**. Le préfixe `budget_` choisi lors de la connexion Neon est reconnu automatiquement ; il n’est pas nécessaire de renommer les variables. Si les deux noms existent, `DATABASE_URL` est prioritaire. Pour un autre préfixe, ajouter `DATABASE_URL` avec la chaîne de connexion PostgreSQL fournie par Neon. Utiliser de préférence la connexion poolée. Saisir les valeurs uniquement dans les paramètres sécurisés Vercel, jamais dans Git ou dans le chat.
 
 Le pilote impose TLS avec vérification du certificat et du nom d’hôte. Le schéma est initialisé automatiquement au premier accès, sans effacer les données existantes. L’utilisateur PostgreSQL doit pouvoir créer les tables et séquences dans sa propre base.
 

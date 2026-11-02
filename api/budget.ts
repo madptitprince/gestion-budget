@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { isAuthenticated } from './auth-util';
-import { getDb, initDb } from './db';
+import { isAuthenticated } from './auth-util.js';
+import { getDb, initDb } from './db.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -63,3 +63,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Erreur lors de la synchronisation avec la base de données.' });
   }
 }
+

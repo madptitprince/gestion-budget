@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import type { IncomingMessage } from 'http';
-import { getDb, initDb } from './db';
+import { getDb, initDb } from './db.js';
 
 const SESSION_SECONDS = 86400; // 24 hours
 
@@ -110,6 +110,11 @@ export async function attemptLogin(password: string): Promise<{ status: number; 
   } else if (!process.env.VERCEL) {
     // In local dev without BUDGET_PASSWORD configured, allow login
     isValid = true;
+  } else {
+    return {
+      status: 503,
+      error: "Accès privé non configuré : BUDGET_PASSWORD n'est pas défini dans les variables d'environnement Vercel.",
+    };
   }
 
   if (!isValid) {

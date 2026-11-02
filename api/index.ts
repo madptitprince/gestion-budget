@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import sessionHandler from './session';
-import loginHandler from './login';
-import logoutHandler from './logout';
-import budgetHandler from './budget';
+import sessionHandler from './session.js';
+import loginHandler from './login.js';
+import logoutHandler from './logout.js';
+import budgetHandler from './budget.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const url = req.url || '';
@@ -23,3 +23,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return res.status(404).json({ error: 'Endpoint introuvable.' });
 }
+

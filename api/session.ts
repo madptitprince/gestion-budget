@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { isAuthenticated, isAuthEnabled, extractSessionToken } from './auth-util';
+import { isAuthenticated, isAuthEnabled, extractSessionToken } from './auth-util.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -26,3 +26,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Erreur lors de la vérification de session.' });
   }
 }
+

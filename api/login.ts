@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { attemptLogin, formatCookie } from './auth-util';
+import { attemptLogin, formatCookie } from './auth-util.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -30,3 +30,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Erreur serveur lors de la connexion.' });
   }
 }
+

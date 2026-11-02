@@ -9,7 +9,11 @@ export const useBudget = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        const novSalary = parsed?.['2026']?.income?.[0]?.values?.nov;
+        if (typeof novSalary === 'number' && novSalary > 0) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Error loading budget data from localStorage', e);

@@ -1,7 +1,12 @@
 import { neon } from '@neondatabase/serverless';
 
 export function getDatabaseUrl(): string | undefined {
-  return process.env.DATABASE_URL || process.env.budget_DATABASE_URL;
+  return (
+    process.env.DATABASE_URL ||
+    process.env.budget_DATABASE_URL ||
+    process.env.budget_POSTGRES_URL ||
+    process.env.POSTGRES_URL
+  );
 }
 
 export function getDb() {
@@ -50,3 +55,4 @@ export async function initDb() {
     throw err;
   }
 }
+

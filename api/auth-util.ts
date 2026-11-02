@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import type { IncomingMessage } from 'http';
 import { getDb, initDb } from './db';
 
@@ -13,12 +13,12 @@ export function isAuthEnabled(): boolean {
 }
 
 export function digest(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return createHash('sha256').update(token).digest('hex');
 }
 
 export function sessionDigest(token: string): string {
   const secret = getExpectedPassword();
-  return crypto.createHash('sha256').update(token + secret).digest('hex');
+  return createHash('sha256').update(token + secret).digest('hex');
 }
 
 export function extractSessionToken(headers: IncomingMessage['headers']): string {
@@ -106,7 +106,7 @@ export async function attemptLogin(password: string): Promise<{ status: number; 
   if (expected) {
     const hashA = digest(password);
     const hashB = digest(expected);
-    isValid = crypto.timingSafeEqual(Buffer.from(hashA), Buffer.from(hashB));
+    isValid = timingSafeEqual(Buffer.from(hashA), Buffer.from(hashB));
   } else if (!process.env.VERCEL) {
     // In local dev without BUDGET_PASSWORD configured, allow login
     isValid = true;
@@ -117,7 +117,7 @@ export async function attemptLogin(password: string): Promise<{ status: number; 
   }
 
   // 3. Create session token
-  const token = crypto.randomBytes(32).toString('base64url');
+  const token = randomBytes(32).toString('base64url');
 
   if (sql) {
     const tokenHash = sessionDigest(token);

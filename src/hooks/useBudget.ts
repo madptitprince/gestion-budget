@@ -11,7 +11,7 @@ export const useBudget = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         const novSalary = parsed?.['2026']?.income?.[0]?.values?.nov;
-        if (typeof novSalary === 'number' && novSalary > 0) {
+        if (typeof novSalary === 'number' && novSalary === 1300) {
           return parsed;
         }
       }

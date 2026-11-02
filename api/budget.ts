@@ -33,9 +33,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!shouldSeed && rows.length > 0) {
         try {
           const existing = JSON.parse(rows[0].data_json);
-          // Check if existing data is the old empty November data (salary in nov is 0)
+          // Check if existing data is the old empty/partial November data
           const novSalary = existing?.['2026']?.income?.[0]?.values?.nov || 0;
-          if (novSalary === 0) {
+          if (novSalary !== 1300) {
             shouldSeed = true;
           }
         } catch (_) {
